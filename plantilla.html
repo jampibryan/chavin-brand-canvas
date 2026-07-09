@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Firmas - Chavín</title>
+    <!-- Tipografías de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Librería html2canvas para exportar a imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #1b6d86;
+            --primary-hover: #155569;
+            --primary-light: #38bdf8;
+            --accent: #1f8f3d;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-focus: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* Luces ambientales sutiles de resplandor */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+            top: -10%;
+            left: 10%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+            bottom: -10%;
+            right: 5%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .panel-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        /* Estilo del prefijo de celular */
+        .phone-input-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .phone-prefix {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.8rem 0.9rem;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .phone-input-container input {
+            flex: 1;
+        }
+
+        .format-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 0.3rem;
+            border-radius: 14px;
+        }
+
+        .format-option {
+            display: none;
+        }
+
+        .format-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .format-option:checked+.format-label {
+            background: var(--primary);
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(27, 109, 134, 0.3);
+        }
+
+        .format-label:hover:not(.format-option:checked + .format-label) {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .actions {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1b6d86 0%, #155569 100%);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(27, 109, 134, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(27, 109, 134, 0.5);
+            background: linear-gradient(135deg, #22829e 0%, #1b6d86 100%);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger:active {
+            transform: translateY(0);
+        }
+
+        .panel-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-header label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .preview-badge {
+            background: rgba(31, 143, 61, 0.15);
+            border: 1px solid rgba(31, 143, 61, 0.3);
+            color: #4ade80;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .preview-container-box {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: auto;
+            min-height: 220px;
+            width: 100%;
+        }
+
+        /* Simula un banner rectangular de alta resolución 1600x500 en la vista previa */
+        .signature-banner-preview {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16 / 5;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        /* Estilos del componente de firma dentro de la vista previa */
+        #signature-to-export {
+            width: auto;
+            background: #ffffff;
+            padding: 0;
+            box-sizing: border-box;
+            transform: scale(1.35);
+            transform-origin: center;
+        }
+
+        /* Notificación tipo toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--input-focus);
+            color: var(--text-main);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+
+            .panel-inputs {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>Generador de Firmas Chavín</h1>
+            <p>Diseña, previsualiza y descarga tu firma corporativa al instante</p>
+        </header>
+
+        <!-- Sección de campos de entrada -->
+        <section class="panel-inputs">
+            <div class="form-group">
+                <label for="input-name">Nombre Completo</label>
+                <input type="text" id="input-name" placeholder="Nombre del colaborador">
+            </div>
+
+            <div class="form-group">
+                <label for="input-role">Cargo / Puesto</label>
+                <input type="text" id="input-role" placeholder="Cargo/puesto del colaborador">
+            </div>
+
+            <div class="form-group">
+                <label for="input-phone">Número de Celular</label>
+                <div class="phone-input-container">
+                    <span class="phone-prefix">+51</span>
+                    <input type="tel" id="input-phone" placeholder="935 172 287" value="">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Formato de Descarga</label>
+                <div class="format-selector">
+                    <input type="radio" name="format" id="fmt-png" value="png" checked class="format-option">
+                    <label for="fmt-png" class="format-label">PNG</label>
+
+                    <input type="radio" name="format" id="fmt-jpg" value="jpeg" class="format-option">
+                    <label for="fmt-jpg" class="format-label">JPG</label>
+
+                    <input type="radio" name="format" id="fmt-webp" value="webp" class="format-option">
+                    <label for="fmt-webp" class="format-label">WebP</label>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="btn-download" class="btn btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Descargar Firma
+                </button>
+                <button id="btn-copy-html" class="btn btn-secondary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                        </path>
+                    </svg>
+                    Copiar Código HTML
+                </button>
+                <button id="btn-clear" class="btn btn-danger">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Limpiar
+                </button>
+            </div>
+        </section>
+
+        <!-- Sección de vista previa en vivo -->
+        <section class="panel-preview">
+            <div class="preview-header">
+                <label>Vista Previa en Tiempo Real</label>
+                <span class="preview-badge">En Vivo</span>
+            </div>
+
+            <div class="preview-container-box">
+                <div class="signature-banner-preview">
+                    <div id="signature-to-export">
+                    <!-- Diseño original de la firma, con URLs Base64 para renderizado local -->
+                    <table cellpadding="0" cellspacing="0" border="0"
+                        style="font-family:Arial,Helvetica,sans-serif; background-color: #ffffff; text-align: left; border-collapse: collapse;">
+                        <tr>
+                            <td valign="middle" style="padding-right:15px; width: 140px; vertical-align: middle;">
+                                <a href="https://chavin.com.pe" target="_blank"
+                                    style="text-decoration:none; display: block;">
+                                    <img src="data:image/svg+xml;base64,__LOGO_SVG_BASE64__"
+                                        alt="Chavín" width="140" style="display:block;border:0;">
+                                </a>
+                            </td>
+
+                            <td valign="middle"
+                                style="border-left:3px solid #1b6d86; padding-left:15px; vertical-align: middle;">
+                                <div id="preview-name"
+                                    style="font-size:14px;font-weight:bold;color:#000; font-family:Arial,Helvetica,sans-serif; line-height: 1.2;">
+                                    Elva Aguirre Trejo
+                                </div>
+
+                                <div id="preview-role"
+                                    style="font-size:13px;font-weight:bold;color:#1b6d86; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 2px;">
+                                    Coordinadora de Logística
+                                </div>
+
+                                <div
+                                    style="font-size:11px;font-weight:bold;color:#000; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 4px;">
+                                    AGRÍCOLA Y GANADERA CHAVÍN DE HUANTAR S.A.
+                                </div>
+
+                                <div
+                                    style="font-size:11px;color:#333; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 2px;">
+                                    Carretera Casma-Huaraz S/N Monte Grande Casma-Ancash
+                                </div>
+
+                                <div id="preview-phone-row"
+                                    style="font-size:11px;color:#333; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 2px;">
+                                    Cel. (51) <span id="preview-phone">989 031 959</span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" style="padding-top:12px;">
+                                <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                                    <tr>
+                                        <td width="150" align="center" valign="middle"
+                                            style="width: 150px; text-align: center; vertical-align: middle;">
+                                            <img src="data:image/jpeg;base64,__MEDIO_AMBIENTE_BASE64__"
+                                                alt="Medio Ambiente" width="70"
+                                                style="display:block;border:0; margin: 0 auto;">
+                                        </td>
+                                        <td
+                                            style="font-family:Georgia,serif;font-size:11px;font-weight:bold;color:#1f8f3d; vertical-align: middle; line-height: 1.3;">
+                                            No imprimas este mensaje si no es necesario. ¡Cuida el medio ambiente!
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">¡Código copiado al portapapeles!</div>
+
+    <script>
+        const inputName = document.getElementById('input-name');
+        const inputRole = document.getElementById('input-role');
+        const inputPhone = document.getElementById('input-phone');
+
+        const previewName = document.getElementById('preview-name');
+        const previewRole = document.getElementById('preview-role');
+        const previewPhone = document.getElementById('preview-phone');
+        const previewPhoneRow = document.getElementById('preview-phone-row');
+
+        const btnDownload = document.getElementById('btn-download');
+        const btnCopyHtml = document.getElementById('btn-copy-html');
+        const btnClear = document.getElementById('btn-clear');
+        const toast = document.getElementById('toast');
+
+        // Actualización inicial de la vista previa
+        updatePreview();
+
+        // Limpiar todos los campos
+        btnClear.addEventListener('click', () => {
+            inputName.value = '';
+            inputRole.value = '';
+            inputPhone.value = '';
+            updatePreview();
+        });
+
+        // Escuchar cambios en los campos para actualizar la vista previa en tiempo real
+        inputName.addEventListener('input', updatePreview);
+        inputRole.addEventListener('input', updatePreview);
+        inputPhone.addEventListener('input', updatePreview);
+
+        function formatPhoneNumber(phoneStr) {
+            const clean = phoneStr.replace(/\s+/g, '');
+            const matches = clean.match(/.{1,3}/g);
+            return matches ? matches.join(' ') : clean;
+        }
+
+        function updatePreview() {
+            const nameVal = inputName.value.trim() || 'Su nombre aquí';
+            const roleVal = inputRole.value.trim() || 'Su cargo aquí';
+            const phoneVal = inputPhone.value.trim();
+
+            previewName.textContent = nameVal;
+            previewRole.textContent = roleVal;
+
+            // Mostrar número de teléfono formateado con espacios cada 3 dígitos
+            previewPhone.textContent = formatPhoneNumber(phoneVal);
+            previewPhoneRow.style.display = 'block';
+        }
+
+        // Copiar código HTML al portapapeles
+        btnCopyHtml.addEventListener('click', () => {
+            const nameVal = inputName.value.trim();
+            const roleVal = inputRole.value.trim();
+            const phoneVal = formatPhoneNumber(inputPhone.value.trim());
+
+            // Construir la cadena HTML del celular
+            let phoneHtml = '';
+            if (phoneVal) {
+                phoneHtml = `
+            <div style="font-size:11px;color:#333; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 2px;">
+                Cel. (51) ${phoneVal}
+            </div>`;
+            }
+
+            // Plantilla HTML para clientes de correo (usa URLs absolutas para imágenes públicas)
+            const signatureHtmlCode = `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif; text-align: left; border-collapse: collapse;">
+    <tr>
+        <td valign="middle" style="padding-right:15px; width: 140px; vertical-align: middle;">
+            <a href="https://chavin.com.pe" target="_blank" style="text-decoration:none; display: block;">
+                <img src="https://chavin.com.pe/wp-content/themes/themes/chavin/img/logo.svg"
+                     alt="Chavín"
+                     width="140"
+                     style="display:block;border:0;">
+            </a>
+        </td>
+
+        <td valign="middle" style="border-left:3px solid #1b6d86; padding-left:15px; vertical-align: middle;">
+            <div style="font-size:14px;font-weight:bold;color:#000; font-family:Arial,Helvetica,sans-serif; line-height: 1.2;">
+                ${nameVal}
+            </div>
+
+            <div style="font-size:13px;font-weight:bold;color:#1b6d86; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 2px;">
+                ${roleVal}
+            </div>
+
+            <div style="font-size:11px;font-weight:bold;color:#000; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 4px;">
+                AGRÍCOLA Y GANADERA CHAVÍN DE HUANTAR S.A.
+            </div>
+
+            <div style="font-size:11px;color:#333; font-family:Arial,Helvetica,sans-serif; line-height: 1.2; margin-top: 2px;">
+                Carretera Casma-Huaraz S/N Monte Grande Casma-Ancash
+            </div>${phoneHtml}
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" style="padding-top:12px;">
+            <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                <tr>
+                    <td width="150" align="center" valign="middle" style="width: 150px; text-align: center; vertical-align: middle;">
+                        <!-- Nota: Si la imagen está alojada en la web, reemplazar con la URL pública -->
+                        <img src="medio-ambiente.jpeg"
+                             alt="Medio Ambiente"
+                             width="70"
+                             style="display:block;border:0; margin: 0 auto;">
+                    </td>
+                    <td style="font-family:Georgia,serif;font-size:11px;font-weight:bold;color:#1f8f3d; vertical-align: middle; line-height: 1.3;">
+                        No imprimas este mensaje si no es necesario. ¡Cuida el medio ambiente!
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>`;
+
+            navigator.clipboard.writeText(signatureHtmlCode).then(() => {
+                showToast("¡Código HTML copiado al portapapeles!");
+            }).catch(err => {
+                console.error('Error al copiar HTML:', err);
+                showToast("Error al copiar código");
+            });
+        });
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Descargar firma como imagen
+        btnDownload.addEventListener('click', () => {
+            const signatureElement = document.getElementById('signature-to-export');
+
+            // Obtener el formato seleccionado
+            const formatRadio = document.querySelector('input[name="format"]:checked');
+            const format = formatRadio ? formatRadio.value : 'png';
+            const mimeType = `image/${format}`;
+
+            // Determinar el nombre del archivo según el formato
+            const extension = format === 'jpeg' ? 'jpg' : format;
+            const nameVal = inputName.value.trim().replace(/\s+/g, '_') || 'Firma';
+            const filename = `firma_${nameVal.toLowerCase()}.${extension}`;
+
+            // Opciones de renderizado para alta calidad
+            const options = {
+                backgroundColor: '#ffffff',
+                scale: 3, // Escala alta para mayor resolución y texto nítido
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            };
+
+            btnDownload.disabled = true;
+            btnDownload.innerHTML = `
+                <svg class="animate-spin" style="animation: spin 1s linear infinite;" width="20" height="20" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity: 0.25;"></circle>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generando...
+            `;
+
+            // Inyectar estilo de animación de carga temporalmente
+            const style = document.createElement('style');
+            style.innerHTML = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+
+            // Esperar un momento breve para que el DOM se actualice
+            setTimeout(() => {
+                html2canvas(signatureElement, options).then(canvas => {
+                    // Crear el lienzo de destino 1600x500
+                    const exportCanvas = document.createElement('canvas');
+                    exportCanvas.width = 1600;
+                    exportCanvas.height = 500;
+                    const ctx = exportCanvas.getContext('2d');
+
+                    // Fondo blanco sólido
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 1600, 500);
+
+                    // Habilitar escalado de imagen de alta calidad
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+
+                    // Ajustar la firma dentro de un área delimitada (ancho máx. 1420, alto máx. 430)
+                    const maxSigW = 1420;
+                    const maxSigH = 430;
+                    const sigW = canvas.width;
+                    const sigH = canvas.height;
+
+                    const scaleFit = Math.min(maxSigW / sigW, maxSigH / sigH);
+
+                    const finalW = sigW * scaleFit;
+                    const finalH = sigH * scaleFit;
+
+                    // Cálculo de centrado
+                    const dx = (1600 - finalW) / 2;
+                    const dy = (500 - finalH) / 2;
+
+                    // Dibujar la firma centrada en alta resolución
+                    ctx.drawImage(canvas, 0, 0, sigW, sigH, dx, dy, finalW, finalH);
+
+                    // Convertir el lienzo a datos de imagen optimizados
+                    let quality = 1.0;
+                    if (format === 'jpeg') {
+                        quality = 0.85; // Calidad visual indistinguible pero 70% más liviano
+                    } else if (format === 'webp') {
+                        quality = 0.82; // Punto óptimo de compresión WebP
+                    }
+                    const imgData = exportCanvas.toDataURL(mimeType, quality);
+
+                    // Iniciar descarga
+                    const link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Restaurar botón
+                    btnDownload.disabled = false;
+                    btnDownload.innerHTML = `
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Descargar Firma
+                    `;
+                    showToast("¡Firma descargada con éxito!");
+                }).catch(err => {
+                    console.error('Error al generar la imagen:', err);
+                    btnDownload.disabled = false;
+                    btnDownload.innerHTML = `
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Descargar Firma
+                    `;
+                    showToast("Error al exportar la imagen");
+                });
+            }, 300);
+        });
+    </script>
+</body>
+
+</html>
