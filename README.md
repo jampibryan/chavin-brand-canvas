@@ -1,57 +1,62 @@
-# Generador de Firmas Chavín
+# Panel de Activos Corporativos — Chavín
 
-Programa interactivo diseñado para generar y personalizar las firmas de correo institucional de **Agrícola y Ganadera Chavín de Huantar S.A.** de manera sencilla y rápida.
+Este proyecto es una suite interactiva de herramientas web para la generación y personalización de recursos de marca de **Agrícola y Ganadera Chavín de Huantar S.A.**
 
-Funciona directamente en cualquier navegador web y está completamente auto-contenido (no necesita servidor ni instalación).
-
----
-
-## 🚀 Cómo utilizar el programa
-
-1. **Abrir el generador:**
-   * Haz doble clic sobre el archivo `index.html` para abrirlo en tu navegador favorito (Google Chrome, Microsoft Edge, Mozilla Firefox o Safari).
-
-2. **Personalizar la información:**
-   * **Nombre Completo:** Escribe tu nombre tal como quieres que aparezca.
-   * **Cargo / Puesto:** Escribe tu puesto de trabajo.
-   * **Número de Celular:** Ingresa el número telefónico. 
-     > ⚠️ **Nota:** Este número es temporal. Por seguridad y privacidad, no se guardará en el navegador y se borrará si cierras o recargas la pestaña del programa.
-
-3. **Elegir el formato de descarga:**
-   * En el selector de formato, elige cómo quieres descargar la firma:
-     * **PNG:** Formato de alta calidad sin pérdida de detalles (Recomendado).
-     * **JPG:** Formato comprimido estándar.
-     * **WebP:** Formato moderno optimizado para web con compresión avanzada.
-
-4. **Descargar la firma como imagen:**
-   * Haz clic en el botón **Descargar Firma**. El programa convertirá tu firma en una imagen de alta resolución y la descargará en la carpeta de descargas de tu computadora.
-
-5. **Copiar la firma en formato HTML:**
-   * Si en lugar de una imagen necesitas el código HTML para pegarlo directamente en Outlook, Gmail u otro gestor de correo, haz clic en el botón **Copiar Código HTML**. Esto copiará el código del diseño al portapapeles para que puedas pegarlo directamente en la configuración de firmas de tu correo.
+El proyecto está diseñado como una aplicación web portable y auto-contenida que funciona directamente en cualquier navegador web moderno sin necesidad de servidores ni instalaciones adicionales.
 
 ---
 
 ## 📂 Estructura del Proyecto
 
-| Archivo               | Descripción                                                                                                                                           |
-|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `index.html`          | La aplicación interactiva final. Contiene las imágenes embebidas en Base64 para funcionar sin problemas de seguridad al abrirlo localmente.          |
-| `plantilla.html`      | La plantilla fuente del generador. Contiene marcadores (`__LOGO_SVG_BASE64__` y `__MEDIO_AMBIENTE_BASE64__`) que se reemplazan al compilar.          |
-| `logo.svg`            | Logotipo corporativo vectorizado de Chavín.                                                                                                           |
-| `medio-ambiente.jpeg` | Banner del cuidado del medio ambiente.                                                                                                                |
-| `build.ps1`           | Script de compilación en PowerShell. Toma la plantilla y las imágenes, y genera `index.html` con todo embebido.                                      |
-| `README.md`           | Este archivo de documentación.                                                                                                                        |
+* **[index.html](file:///c:/Disco%20D/PROYECTOS/firma/index.html):** Panel principal (Dashboard) para acceder a las diferentes herramientas.
+* **[firmas/index.html](file:///c:/Disco%20D/PROYECTOS/firma/firmas/index.html):** Generador interactivo de firmas de correo electrónico.
+* **[credenciales/index.html](file:///c:/Disco%20D/PROYECTOS/firma/credenciales/index.html):** Generador de fotochecks e identificaciones para el personal.
+* **[assets/](file:///c:/Disco%20D/PROYECTOS/firma/assets):** Carpeta de recursos compartidos (logotipo corporativo y banner ambiental).
+* **[build.ps1](file:///c:/Disco%20D/PROYECTOS/firma/build.ps1):** Script de automatización en PowerShell que procesa las imágenes y las embebe en Base64 dentro del código final para evitar problemas de seguridad del navegador (CORS).
 
 ---
 
-## 🔧 Recompilar el proyecto
+## 🛠️ Herramientas Incluidas
 
-Si cambias las imágenes (`logo.svg` o `medio-ambiente.jpeg`) o editas la plantilla (`plantilla.html`), necesitas regenerar `index.html`.
+### 1. Generador de Firmas de Correo
+Permite crear la firma institucional con los datos dinámicos del colaborador:
+* **Nombre completo y Cargo.**
+* **Número de celular temporal** (volátil, se borra al actualizar).
+* **Campos corporativos fijos** (razón social, dirección, banner ecológico).
+* Descarga de imagen en alta resolución en formato **PNG, JPG o WebP**.
+* Botón **Copiar Código HTML** para pegarla directamente en la configuración de Outlook, Gmail u otros clientes.
 
-Abre PowerShell en la carpeta del proyecto y ejecuta:
+### 2. Generador de Credenciales y Fotochecks (Nuevo)
+Permite diseñar credenciales de identificación listas para imprimir:
+* Campos de texto: **Nombre completo, Cargo, Área/Departamento y DNI**.
+* **Carga de foto de perfil** desde el dispositivo (recortada y adaptada automáticamente).
+* **Generación automática de Código QR** que contiene la ficha de datos del empleado.
+* Selección de orientación en tiempo real:
+  * **Vertical**: Formato clásico de fotocheck con banda azul superior y foto de perfil centrada.
+  * **Horizontal**: Formato tipo tarjeta de presentación, con la banda azul orientada verticalmente a la izquierda (cubriendo hasta la mitad de la foto de perfil) y la información de contacto y QR a la derecha sobre fondo claro.
+* Exportación a escala 4x (alta resolución para impresión) en **PNG, JPG o WebP**.
+
+---
+
+## 🚀 Cómo utilizar la suite
+
+1. Haz doble clic sobre el archivo **[index.html](file:///c:/Disco%20D/PROYECTOS/firma/index.html)** en la raíz del proyecto.
+2. Selecciona la herramienta que deseas utilizar (Firmas o Credenciales).
+3. Rellena los datos en el panel izquierdo.
+4. Observa el resultado en tiempo real en la vista previa del panel derecho.
+5. Elige el formato y descarga tu recurso listo para usar.
+
+---
+
+## ⚙️ Modificación y Recompilación
+
+Si cambias los archivos fuente o editas las plantillas:
+1. Las plantillas editables son **`firmas/plantilla.html`** y **`credenciales/plantilla.html`**.
+2. Las imágenes fuente están en la carpeta **`assets/`**.
+3. Una vez realizados los cambios, abre PowerShell en la raíz del proyecto y ejecuta el script de compilación para actualizar los archivos de producción:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-Esto regenerará el archivo `index.html` con las imágenes actualizadas embebidas en Base64.
+Esto generará automáticamente los archivos actualizados `index.html` correspondientes en las carpetas `firmas/` y `credenciales/`.

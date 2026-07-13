@@ -1,64 +1,72 @@
 # ============================================================
-# Script de compilación - Generador de Firmas Chavín
+# Script de compilación - Panel de Activos Chavín
 # ============================================================
-# Este script lee la plantilla HTML (plantilla.html) y reemplaza
-# los marcadores de posición (__LOGO_SVG_BASE64__ y
-# __MEDIO_AMBIENTE_BASE64__) con las imágenes codificadas
-# en Base64, generando el archivo final index.html.
+# Este script toma las plantillas HTML del generador de firmas
+# y del generador de credenciales, y las compila insertando
+# las imágenes corporativas locales en formato Base64.
+#
+# Genera:
+#   - firmas/index.html (a partir de firmas/plantilla.html)
+#   - credenciales/index.html (a partir de credenciales/plantilla.html)
 #
 # USO:
-#   Abre PowerShell en la carpeta del proyecto y ejecuta:
+#   Abre PowerShell en la carpeta raíz del proyecto y ejecuta:
 #   powershell -ExecutionPolicy Bypass -File .\build.ps1
 # ============================================================
 
 $currentDir = Get-Location
-Write-Host "Compilando generador de firmas en: $currentDir"
+Write-Host "Compilando activos corporativos de Chavín en: $currentDir" -ForegroundColor Cyan
 
-# Rutas de los archivos fuente
-$logoPath = Join-Path $currentDir "logo.svg"
-$medioPath = Join-Path $currentDir "medio-ambiente.jpeg"
-$templatePath = Join-Path $currentDir "plantilla.html"
-$outputPath = Join-Path $currentDir "index.html"
+# Rutas de los activos de imagen compartidos
+$logoPath = Join-Path $currentDir "assets\logo.svg"
+$medioPath = Join-Path $currentDir "assets\medio-ambiente.jpeg"
 
-# Verificar que el logo de Chavín existe
+# Verificar que existan las imágenes
 if (-not (Test-Path $logoPath)) {
     Write-Error "No se encontró el logo de Chavín en: $logoPath"
     exit 1
 }
-
-# Verificar que la imagen de medio ambiente existe
 if (-not (Test-Path $medioPath)) {
     Write-Error "No se encontró la imagen de medio ambiente en: $medioPath"
     exit 1
 }
 
-# Verificar que la plantilla HTML existe
-if (-not (Test-Path $templatePath)) {
-    Write-Error "No se encontró la plantilla en: $templatePath"
-    exit 1
-}
-
-# Leer y convertir logo.svg a Base64
-Write-Host "Leyendo y convirtiendo logo.svg a Base64..."
+# Convertir imágenes compartidas a Base64 una sola vez
+Write-Host "Leyendo y convirtiendo logo.svg a Base64..." -ForegroundColor Gray
 $logoBytes = [System.IO.File]::ReadAllBytes($logoPath)
 $logoBase64 = [System.Convert]::ToBase64String($logoBytes)
 
-# Leer y convertir medio-ambiente.jpeg a Base64
-Write-Host "Leyendo y convirtiendo medio-ambiente.jpeg a Base64..."
+Write-Host "Leyendo y convirtiendo medio-ambiente.jpeg a Base64..." -ForegroundColor Gray
 $medioBytes = [System.IO.File]::ReadAllBytes($medioPath)
 $medioBase64 = [System.Convert]::ToBase64String($medioBytes)
 
-# Leer la plantilla HTML
-Write-Host "Leyendo plantilla HTML..."
-$htmlContent = [System.IO.File]::ReadAllText($templatePath)
+# --- COMPILACIÓN 1: Generador de Firmas ---
+$firmaTemplate = Join-Path $currentDir "firmas\plantilla.html"
+$firmaOutput = Join-Path $currentDir "firmas\index.html"
 
-# Reemplazar los marcadores de posición con las imágenes en Base64
-Write-Host "Reemplazando marcadores de posición..."
-$htmlContent = $htmlContent.Replace("__LOGO_SVG_BASE64__", $logoBase64)
-$htmlContent = $htmlContent.Replace("__MEDIO_AMBIENTE_BASE64__", $medioBase64)
+if (Test-Path $firmaTemplate) {
+    Write-Host "Compilando módulo de Firmas..." -ForegroundColor Yellow
+    $htmlFirmas = [System.IO.File]::ReadAllText($firmaTemplate)
+    $htmlFirmas = $htmlFirmas.Replace("__LOGO_SVG_BASE64__", $logoBase64)
+    $htmlFirmas = $htmlFirmas.Replace("__MEDIO_AMBIENTE_BASE64__", $medioBase64)
+    [System.IO.File]::WriteAllText($firmaOutput, $htmlFirmas, [System.Text.Encoding]::UTF8)
+    Write-Host "  -> Generado: firmas/index.html" -ForegroundColor Green
+} else {
+    Write-Warning "No se encontró la plantilla de firmas en: $firmaTemplate"
+}
 
-# Guardar el archivo final index.html
-Write-Host "Guardando index.html..."
-[System.IO.File]::WriteAllText($outputPath, $htmlContent, [System.Text.Encoding]::UTF8)
+# --- COMPILACIÓN 2: Generador de Credenciales ---
+$credTemplate = Join-Path $currentDir "credenciales\plantilla.html"
+$credOutput = Join-Path $currentDir "credenciales\index.html"
 
-Write-Host "¡Compilación exitosa! index.html generado."
+if (Test-Path $credTemplate) {
+    Write-Host "Compilando módulo de Credenciales..." -ForegroundColor Yellow
+    $htmlCreds = [System.IO.File]::ReadAllText($credTemplate)
+    $htmlCreds = $htmlCreds.Replace("__LOGO_SVG_BASE64__", $logoBase64)
+    [System.IO.File]::WriteAllText($credOutput, $htmlCreds, [System.Text.Encoding]::UTF8)
+    Write-Host "  -> Generado: credenciales/index.html" -ForegroundColor Green
+} else {
+    Write-Warning "No se encontró la plantilla de credenciales en: $credTemplate"
+}
+
+Write-Host "`n¡Compilación exitosa de todos los activos corporativos!" -ForegroundColor Cyan

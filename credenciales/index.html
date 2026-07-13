@@ -1,0 +1,1140 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Credenciales - Chavín</title>
+    <!-- Tipografías de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Librerías desde CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #1b6d86;
+            --primary-hover: #155569;
+            --primary-light: #38bdf8;
+            --accent: #1f8f3d;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-focus: #38bdf8;
+            --chavin-blue: #0200CD;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* Luces ambientales */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+            top: -10%;
+            left: 10%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+            bottom: -10%;
+            right: 5%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.1fr 1.2fr;
+            grid-template-areas:
+                "header header"
+                "inputs preview"
+                "controls preview";
+            gap: 2.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .container.horizontal-layout {
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas:
+                "header header"
+                "inputs controls"
+                "preview preview";
+        }
+
+        .container.horizontal-layout .panel-preview {
+            align-items: center;
+        }
+
+        .container.horizontal-layout .preview-container-box {
+            min-height: 420px;
+            width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            grid-area: header;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .panel-inputs-main {
+            grid-area: inputs;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .panel-controls {
+            grid-area: controls;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .file-upload-btn {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1.5px dashed rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            color: var(--primary-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-upload-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--primary-light);
+        }
+
+        .file-upload-btn input {
+            display: none;
+        }
+
+        .orientation-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 0.3rem;
+            border-radius: 14px;
+        }
+
+        .format-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 0.3rem;
+            border-radius: 14px;
+        }
+
+        .option-radio {
+            display: none;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .option-radio:checked + .option-label {
+            background: var(--primary);
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(27, 109, 134, 0.3);
+        }
+
+        .option-label:hover:not(.option-radio:checked + .option-label) {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1b6d86 0%, #155569 100%);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(27, 109, 134, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(27, 109, 134, 0.5);
+            background: linear-gradient(135deg, #22829e 0%, #1b6d86 100%);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .panel-preview {
+            grid-area: preview;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-header label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .preview-badge {
+            background: rgba(31, 143, 61, 0.15);
+            border: 1px solid rgba(31, 143, 61, 0.3);
+            color: #4ade80;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .preview-container-box {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: auto;
+            min-height: 520px;
+        }
+
+        /* DISEÑO DE LA CREDENCIAL DE EXPORTACIÓN */
+        .badge-element {
+            background: #FAFBFC;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: #1E293B;
+            position: relative;
+        }
+
+        /* Estilo Vertical */
+        .badge-vertical {
+            width: 320px;
+            height: 500px;
+            border-radius: 16px;
+        }
+
+        /* Estilo Horizontal */
+        .badge-horizontal {
+            width: 560px;
+            height: 320px;
+            border-radius: 16px;
+            flex-direction: row;
+        }
+
+        /* Cabecera corporativa */
+        .badge-header-blue {
+            background: #0D47A1;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .badge-vertical .badge-header-blue {
+            height: 65px; /* 13% de la altura total */
+        }
+
+        .badge-horizontal .badge-header-blue {
+            width: 100px; /* ~18% del ancho total */
+            height: 100%;
+            flex-direction: column;
+            padding: 20px 10px;
+            justify-content: center;
+        }
+
+        .badge-logo-img {
+            display: block;
+            border: 0;
+        }
+
+        .badge-vertical .badge-logo-img {
+            width: 110px;
+        }
+
+        .badge-horizontal .badge-logo-img {
+            width: 100px;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+
+        /* Contenido de la credencial */
+        .badge-body {
+            flex-grow: 1;
+            display: flex;
+            padding: 20px;
+            box-sizing: border-box;
+            background: #FAFBFC;
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge-vertical .badge-body {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: space-between;
+        }
+
+        .badge-horizontal .badge-body {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            width: 460px;
+            padding: 20px 25px;
+        }
+
+        /* Foto del Colaborador */
+        .badge-avatar-container {
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            width: 110px;
+            height: 110px;
+        }
+
+        .badge-vertical .badge-avatar-container {
+            z-index: 3;
+            position: absolute;
+        }
+
+        .badge-horizontal .badge-avatar-container {
+            z-index: 3;
+            position: absolute;
+        }
+
+        .badge-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        /* Información del colaborador */
+        .badge-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .badge-vertical .badge-info {
+            align-items: center;
+            margin: 5px 0;
+            width: 100%;
+        }
+
+        .badge-horizontal .badge-info {
+            align-items: flex-start;
+            flex-grow: 1;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .badge-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1E293B;
+            line-height: 1.25;
+            font-family: Arial, Helvetica, sans-serif;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+        }
+
+        .badge-role {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1565C0;
+            margin-top: 2px;
+            font-family: Arial, Helvetica, sans-serif;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+        }
+
+        .badge-divider {
+            border-top: 1.5px solid #E2E8F0;
+            width: 80%;
+            margin: 10px 0;
+        }
+
+        .badge-horizontal .badge-divider {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .badge-meta-row {
+            font-size: 14px;
+            color: #1E293B;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 220px;
+            margin: 2px 0;
+        }
+
+        .badge-horizontal .badge-meta-row {
+            max-width: 180px;
+        }
+
+        .badge-meta-label {
+            color: #64748B;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .badge-meta-value {
+            font-weight: 600;
+            color: #1E293B;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            flex-grow: 1;
+            text-align: right;
+            padding-left: 10px;
+        }
+
+        /* QR y Pie de página */
+        .badge-qr-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 1px solid #E2E8F0;
+            padding: 5px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 110px;
+            height: 110px;
+        }
+
+        .badge-vertical .badge-qr-container {
+            margin-bottom: 5px;
+        }
+
+        .badge-footer-text {
+            font-size: 8px;
+            font-weight: 600;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+            width: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .badge-vertical .badge-footer-text {
+            border-top: 1px solid #E2E8F0;
+            padding-top: 8px;
+        }
+
+        .badge-horizontal .badge-footer-text {
+            position: absolute;
+            bottom: 8px;
+            right: 25px;
+            text-align: right;
+            width: auto;
+        }
+
+        .badge-horizontal-left-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge-horizontal-right-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            padding-bottom: 15px;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--input-focus);
+            color: var(--text-main);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 868px) {
+            body {
+                padding: 1rem;
+            }
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <div style="text-align: left; margin-bottom: 1rem;">
+                <a href="../index.html" style="color: var(--primary-light); text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; transition: color 0.2s;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Volver al Panel
+                </a>
+            </div>
+            <h1>Credenciales y Fotochecks</h1>
+            <p>Diseña, previsualiza y exporta credenciales de identidad listas para imprimir</p>
+        </header>
+
+        <!-- Sección de Datos del Colaborador -->
+        <section class="panel-inputs-main">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="input-name">Nombre Completo</label>
+                    <input type="text" id="input-name" placeholder="Nombre del colaborador">
+                </div>
+
+                <div class="form-group">
+                    <label for="input-role">Cargo / Puesto</label>
+                    <input type="text" id="input-role" placeholder="Cargo/puesto del colaborador">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="input-area">Área / Departamento</label>
+                    <input type="text" id="input-area" placeholder="Área del colaborador">
+                </div>
+
+                <div class="form-group">
+                    <label for="input-dni">DNI / Documento</label>
+                    <input type="text" id="input-dni" placeholder="Número de DNI">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Foto de Perfil</label>
+                <label class="file-upload-btn">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Seleccionar Foto</span>
+                    <input type="file" id="input-photo" accept="image/*">
+                </label>
+            </div>
+        </section>
+
+        <!-- Sección de Controles y Botones -->
+        <section class="panel-controls">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Orientación</label>
+                    <div class="orientation-selector">
+                        <input type="radio" name="orientation" id="orient-vert" value="vertical" checked class="option-radio">
+                        <label for="orient-vert" class="option-label">Vertical</label>
+
+                        <input type="radio" name="orientation" id="orient-horiz" value="horizontal" class="option-radio">
+                        <label for="orient-horiz" class="option-label">Horizontal</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Formato de Descarga</label>
+                    <div class="format-selector">
+                        <input type="radio" name="format" id="fmt-png" value="png" checked class="option-radio">
+                        <label for="fmt-png" class="option-label">PNG</label>
+
+                        <input type="radio" name="format" id="fmt-jpg" value="jpeg" class="option-radio">
+                        <label for="fmt-jpg" class="option-label">JPG</label>
+
+                        <input type="radio" name="format" id="fmt-webp" value="webp" class="option-radio">
+                        <label for="fmt-webp" class="option-label">WebP</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="btn-download" class="btn btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Descargar Credencial
+                </button>
+                <button id="btn-clear" class="btn btn-danger">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Limpiar
+                </button>
+            </div>
+        </section>
+
+        <!-- Right Column: Live Preview -->
+        <section class="panel-preview">
+            <div class="preview-header">
+                <label>Vista Previa en Vivo</label>
+                <span class="preview-badge">En Vivo</span>
+            </div>
+
+            <div class="preview-container-box">
+                <!-- CREDENCIAL VERTICAL (DEFAULT) -->
+                <div id="badge-card" class="badge-element badge-vertical" style="position: relative;">
+                    <!-- Foto de Perfil (Absoluta) -->
+                    <div class="badge-avatar-container" style="position: absolute; top: 30px; left: 105px; width: 110px; height: 110px; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); z-index: 3; overflow: hidden; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0;">
+                        <!-- Avatar default SVG -->
+                        <img id="badge-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" class="badge-avatar-img" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                    </div>
+
+                    <!-- Cuerpo de contenido -->
+                    <div id="badge-dynamic-content" class="badge-body" style="position: absolute; top: 0; left: 0; width: 320px; height: 500px; padding: 160px 25px 25px 25px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #FAFBFC; z-index: 2; border-radius: 16px;">
+                        <!-- Banda Azul Superior -->
+                        <div class="badge-header-band" style="position: absolute; top: 0; left: 0; width: 100%; height: 85px; background: #0D4FB3; border-top-left-radius: 16px; border-top-right-radius: 16px; z-index: 1;"></div>
+                        <!-- Info -->
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                            <div id="badge-name" class="badge-name" style="font-size: 22px; font-weight: 700; color: #1E293B; font-family: Arial, sans-serif; text-align: center; line-height: 1.2;">Nombre Colaborador</div>
+                            <div id="badge-role" class="badge-role" style="font-size: 15px; font-weight: 600; color: #1565C0; font-family: Arial, sans-serif; text-align: center; margin-top: 4px;">Cargo / Puesto</div>
+                            
+                            <div class="badge-divider" style="border-top: 1.5px solid #E2E8F0; width: 85%; margin: 10px 0;"></div>
+                            
+                            <div class="badge-meta-row">
+                                <span class="badge-meta-label">Área</span>
+                                <span id="badge-area" class="badge-meta-value">Área</span>
+                            </div>
+                            <div class="badge-meta-row">
+                                <span class="badge-meta-label">DNI</span>
+                                <span id="badge-dni" class="badge-meta-value">DNI</span>
+                            </div>
+                        </div>
+
+                        <!-- QR -->
+                        <div class="badge-qr-container" style="display: flex; align-items: center; justify-content: center; background: #ffffff; border: 1px solid #E2E8F0; padding: 5px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); width: 110px; height: 110px;">
+                            <div id="badge-qrcode"></div>
+                        </div>
+
+                        <!-- Footer con logo integrado -->
+                        <div id="badge-footer" class="badge-footer-text" style="border-top: 1px solid #E2E8F0; width: 100%; padding-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box;">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTE2IiBoZWlnaHQ9IjY1IiB2aWV3Qm94PSIwIDAgMTE2IDY1IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iR3JvdXAiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNMCAzNS44MjI5QzAgMzUuODIyOSAzMi41MzA2IDEwNi4wODcgMTE1LjEzOSAyNy43NDE3QzExNS4yNCAyNy42NDY3IDEwMC42MDIgMTcuMTY4MSA5OS43MDEgMTYuNjA2NUM4OC4zNDQzIDkuNTMyNDUgNzUuODcyMyAzLjc4NTI5IDYyLjY5MzIgMS4yMzYyMkM0NS40MzM2IC0yLjEwMjA1IDI3LjA3ODggMS4xMjM4OSAxMy44NDQyIDEzLjMyMkM3LjQ0NTMyIDE5LjIxODkgMi44NDAxNCAyNy42MzcxIDAgMzUuODIyOVoiIGZpbGw9IiMwMjAwQ0QiLz4KPGcgaWQ9Ikdyb3VwXzIiPgo8ZyBpZD0iR3JvdXBfMyI+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTM4LjQyNzQgMjUuNjgyM0gzOC4yNTU0QzM3LjIwNzEgMjUuNjgyMyAzNi4zMjAzIDI1LjkzODYgMzUuNjIwNyAyNi40NDM2QzM1LjE1NzMgMjYuNzc4NyAzNC43NjQ1IDI3LjIyMzIgMzQuNDUwMSAyNy43NzA1VjIwLjA5NDVIMzAuMTY1VjM5Ljk4NzhIMzQuNDUwMVYzMi4wMDg0QzM0LjQ1MDEgMzEuMjY4MSAzNC42NjEzIDMwLjY3IDM1LjA3NzkgMzAuMjI4M0MzNS40OTg0IDI5Ljc4MzggMzYuMDM5MyAyOS41Njc4IDM2LjczMjEgMjkuNTY3OEMzNy40MjUgMjkuNTY3OCAzNy45MTA0IDI5Ljc3MjMgMzguMzEzNyAzMC4xOTI4QzM4LjcxMzIgMzAuNjA5NSAzOC45MTU4IDMxLjE3MTIgMzguOTE1OCAzMS44NjA1VjM5Ljk4ODdINDMuMjAwOFYzMi4xMDczQzQzLjIwMDggMzAuMDM2MyA0Mi43OTI3IDI4LjQzNDkgNDEuOTg2MiAyNy4zNDcxQzQxLjE2ODIgMjYuMjQzIDM5Ljk3MDggMjUuNjgzMiAzOC40Mjg0IDI1LjY4MzJMMzguNDI3NCAyNS42ODIzWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggaWQ9IlZlY3Rvcl8zIiBkPSJNNjQuNjY4NyAzNS42NjgzTDYxLjk5MjkgMjYuMTAxOEg1Ny41NjY0TDYxLjY2NTEgMzkuODYxTDYxLjcwMzMgMzkuOTg3N0g2Ny41NDk5TDcxLjEzMTYgMjYuMTAxOEg2Ni45Nzk0TDY0LjY2ODcgMzUuNjY4M1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGlkPSJWZWN0b3JfNCIgZD0iTTc3LjA1NTYgMjYuMTAxOEg3Mi43NzA1VjM5Ljk4NzdINzcuMDU1NlYyNi4xMDE4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggaWQ9IlZlY3Rvcl81IiBkPSJNODYuOTkxNCAyNi4xMDE4SDg2LjgxOTRDODUuNzU5NiAyNi4xMDE4IDg0Ljg0MzEgMjYuMzM2MSA4NC4wOTY4IDI2Ljc5ODhDODMuMzY4NiAyNy4yNTEgODIuODE0MyAyNy45Mjg5IDgyLjQ0ODMgMjguODE0MVYyNi4xMDE4SDc4Ljk3NDZWMzkuOTg3N0g4My4yNTk3VjMyLjE3MDZDODMuMjU5NyAzMS40Nzc0IDgzLjQ2NDIgMzAuOTM1IDgzLjg4MzcgMzAuNTEwNkM4NC4zMDMyIDMwLjA4NzIgODQuODQ2IDI5Ljg4MDggODUuNTQwOCAyOS44ODA4Qzg2LjIzNTUgMjkuODgwOCA4Ni43MzgyIDMwLjA4MjQgODcuMTMzOCAzMC40OTcyQzg3LjUzMTMgMzAuOTEzOCA4Ny43MjQ0IDMxLjQzOCA4Ny43MjQ0IDMyLjA5ODZWMzkuOTg3N0g5Mi4wMDk0VjMyLjMxNDZDOTIuMDA5NCAzMC4yNTQyIDkxLjU3ODQgMjguNjg5MyA5MC43MjcgMjcuNjYyOUM4OS44Njg4IDI2LjYyNyA4OC42MTEyIDI2LjEwMjggODYuOTkxNCAyNi4xMDI4VjI2LjEwMThaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBpZD0iVmVjdG9yXzYiIGQ9Ik0yMS4yMjk0IDI0Ljc4NTVDMjIuOTU3MiAyNC43ODU1IDI0LjQ4NDMgMjUuNjMwNCAyNS40MzcxIDI2LjkyODVMMjguNzYxNyAyMy41ODgzQzI2Ljk0ODkgMjEuNDUyMSAyNC4yNDczIDIwLjA5NDUgMjEuMjI4NSAyMC4wOTQ1QzE1Ljc2MjMgMjAuMDk0NSAxMS4zMjkxIDI0LjU0ODQgMTEuMzI5MSAzMC4wNDAyQzExLjMyOTEgMzUuNTMyIDE1Ljc2MjMgMzkuOTg1OSAyMS4yMjg1IDM5Ljk4NTlDMjQuMTkwOSAzOS45ODU5IDI2Ljg0NjYgMzguNjgyIDI4LjY1NTYgMzYuNjEzTDI1LjM0MDYgMzMuMjgyNEMyNC4zODMgMzQuNTA2NiAyMi44OTg5IDM1LjI5NjcgMjEuMjI4NSAzNS4yOTY3QzE4LjMzOTYgMzUuMjk2NyAxNS45OTc0IDMyLjk0MzUgMTUuOTk3NCAzMC4wNDExQzE1Ljk5NzQgMjcuMTM4NyAxOC4zMzk2IDI0Ljc4NTUgMjEuMjI4NSAyNC43ODU1SDIxLjIyOTRaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBpZD0iVmVjdG9yXzciIGQ9Ik01Ni40NTQ3IDI4LjQ3MDRDNTUuOTQ1NCAyNy42NzY0IDU1LjE5NDMgMjcuMDc1NCA1NC4yMjE0IDI2LjY4MzZDNTMuMjYyOSAyNi4yOTc3IDUyLjA3MDMgMjYuMTAxOCA1MC42Nzc5IDI2LjEwMThDNTAuMjAxMSAyNi4xMDE4IDQ5LjY5MTcgMjYuMTEwNCA0OS4xNDg5IDI2LjEyNThDNDguNjA1MiAyNi4xNDIxIDQ4LjA3MzggMjYuMTY2MSA0Ny41NzAyIDI2LjE5NjlDNDcuMDYwOSAyNi4yMjg1IDQ2LjYxNzUgMjYuMjYwMiA0Ni4yNCAyNi4yOTE5TDQ2LjA3ODUgMjYuMzA1M1YyOS44NTY4TDQ2LjI2NTggMjkuODQ1MkM0Ni43NzMyIDI5LjgxMzYgNDcuMzM3MSAyOS43ODE5IDQ3Ljk2MDEgMjkuNzUwMkM0OC41ODEzIDI5LjcxOTUgNDkuMTg2MiAyOS42OTU1IDQ5Ljc3MzkgMjkuNjc5MUM1MC4zNjI2IDI5LjY2MzggNTAuODM1NiAyOS42NTYxIDUxLjE5NDkgMjkuNjU2MUM1MS44NjM5IDI5LjY1NjEgNTIuMzUxMiAyOS44MDU5IDUyLjY0MjcgMzAuMTAxNkM1Mi45MTQxIDMwLjM3NjIgNTMuMDYxMyAzMC43OTI5IDUzLjA4MDQgMzEuMzQwMUg1MC44MjYxQzQ5LjYxNzIgMzEuMzQwMSA0OC41MzI1IDMxLjQ4OTkgNDcuNjAxOCAzMS43ODY2QzQ2LjY1NTcgMzIuMDg4IDQ1LjkwOTMgMzIuNTYxNCA0NS4zODE4IDMzLjE5MjJDNDQuODQ4NiAzMy44MzA2IDQ0LjU3OTEgMzQuNjUzNCA0NC41NzkxIDM1LjY0MDRDNDQuNTc5MSAzNi41NDEgNDQuNzk2IDM3LjMyNzMgNDUuMjIyMiAzNy45NzczQzQ1LjY0NzUgMzguNjI2MyA0Ni4yNDc2IDM5LjEzMDQgNDcuMDA1NSAzOS40NzQxQzQ3Ljc1MzcgMzkuODE0OSA0OC42MzM4IDM5Ljk4NzcgNDkuNjIyIDM5Ljk4NzdDNTAuNjEwMSAzOS45ODc3IDUxLjQwNDIgMzkuODE0IDUyLjA3NDEgMzkuNDcxMkM1Mi43NDg4IDM5LjEyNTYgNTMuMjg0OSAzOC42MjQ0IDUzLjY2OTEgMzcuOTgzMUM1My42OTU4IDM3LjkzODkgNTMuNzIxNiAzNy44OTI4IDUzLjc0NzQgMzcuODQ1OFYzOS45ODc3SDU3LjIyMTFWMzEuNTE2OEM1Ny4yMjExIDMwLjI4NjkgNTYuOTYzMSAyOS4yNjI1IDU2LjQ1NTcgMjguNDcwNEg1Ni40NTQ3Wk01My4xNDczIDM0LjQ4MjVDNTMuMTEgMzUuMTczOCA1Mi45ODAxIDM1LjcxNTMgNTIuNzU3NCAzNi4xMDdDNTIuNTM0NyAzNi40OTg3IDUyLjI1MDkgMzYuNzc1MiA1MS45MDY5IDM2LjkzMzdDNTEuNTYyOSAzNy4wOTMgNTEuMTY4MiAzNy4xNzE4IDUwLjcyMTkgMzcuMTcxOEM1MC4wMzM4IDM3LjE3MTggNDkuNTA0NCAzNi45OTkgNDkuMTMyNyAzNi42NTMzQzQ4Ljc2MDkgMzYuMzA3NyA0OC41NzQ2IDM1Ljg1NTUgNDguNTc0NiAzNS4yOTQ4QzQ4LjU3NDYgMzQuNzM0MSA0OC43NiAzNC4yNTQgNDkuMTMyNyAzMy45MDg0QzQ5LjUwNDQgMzMuNTYyOCA1MC4wMzM4IDMzLjM4OTkgNTAuNzIxOSAzMy4zODk5SDUzLjE0NzNWMzQuNDgyNVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPHBhdGggaWQ9IlZlY3Rvcl84IiBkPSJNNzIuODE1MyAyMy44NjVDNzIuODE1MyAyMy44NjUgNzYuMTA3NCAyNi44NzAxIDc4Ljc1NzQgMjAuODUxMkM3OC43NjAzIDIwLjg0MzUgNzcuNzQ5MiAyMC42MTUgNzcuNjg5IDIwLjYwNTRDNzYuOTI4MyAyMC40ODQ0IDc2LjEzNzEgMjAuNDU4NSA3NS4zNzkyIDIwLjYxODlDNzQuMzg3MyAyMC44MjkxIDczLjQ4MzMgMjEuNDExOSA3My4wNTEzIDIyLjM1NzZDNzIuODQyIDIyLjgxNDYgNzIuNzg0NyAyMy4zNjU3IDcyLjgxNTMgMjMuODY1WiIgZmlsbD0iI0JBRkYyOSIvPgo8L2c+CjwvZz4KPC9zdmc+Cg==" style="height: 20px; width: auto; display: block;">
+                            <div style="text-align: left; font-family: Arial, sans-serif; font-size: 8px; color: #64748B; font-weight: 600; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Agrícola y Ganadera<br>Chavín de Huántar S.A.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">¡Credencial generada!</div>
+
+    <script>
+        // Campos de entrada
+        const inputName = document.getElementById('input-name');
+        const inputRole = document.getElementById('input-role');
+        const inputArea = document.getElementById('input-area');
+        const inputDni = document.getElementById('input-dni');
+        const inputPhoto = document.getElementById('input-photo');
+        const inputOrientation = document.getElementsByName('orientation');
+        
+        // Elementos de la credencial
+        const badgeCard = document.getElementById('badge-card');
+        const badgeDynamicContent = document.getElementById('badge-dynamic-content');
+        
+        const btnDownload = document.getElementById('btn-download');
+        const btnClear = document.getElementById('btn-clear');
+        const toast = document.getElementById('toast');
+
+        // Imagen de perfil por defecto (avatar SVG)
+        const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+        let uploadedPhotoBase64 = null;
+
+        // Inicialización segura de la vista previa
+        setupBadgeLayout(getSelectedOrientation());
+        updatePreview();
+
+        // Registrar escuchadores de eventos para los campos de texto
+        inputName.addEventListener('input', updatePreview);
+        inputRole.addEventListener('input', updatePreview);
+        inputArea.addEventListener('input', updatePreview);
+        inputDni.addEventListener('input', updatePreview);
+        
+        // Registrar escuchador para el cambio de orientación
+        inputOrientation.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const orient = getSelectedOrientation();
+                setupBadgeLayout(orient);
+                updatePreview();
+            });
+        });
+
+        // Evento para limpiar todos los campos
+        btnClear.addEventListener('click', () => {
+            inputName.value = '';
+            inputRole.value = '';
+            inputArea.value = '';
+            inputDni.value = '';
+            inputPhoto.value = '';
+            uploadedPhotoBase64 = null;
+            
+            const elAvatar = document.getElementById('badge-avatar');
+            if (elAvatar) {
+                elAvatar.src = defaultAvatar;
+            }
+            updatePreview();
+            showToast("Campos limpiados");
+        });
+
+        // Evento para cargar la foto de perfil del colaborador
+        inputPhoto.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedPhotoBase64 = event.target.result;
+                    const elAvatar = document.getElementById('badge-avatar');
+                    if (elAvatar) {
+                        elAvatar.src = uploadedPhotoBase64;
+                    }
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Obtener la orientación seleccionada (vertical u horizontal)
+        function getSelectedOrientation() {
+            let val = 'vertical';
+            inputOrientation.forEach(radio => {
+                if (radio.checked) val = radio.value;
+            });
+            return val;
+        }
+
+        // Cambiar dinámicamente la estructura HTML de la credencial según la orientación
+        function setupBadgeLayout(orient) {
+            const container = document.querySelector('.container');
+
+            if (orient === 'vertical') {
+                container.classList.remove('horizontal-layout');
+                badgeCard.className = "badge-element badge-vertical";
+                badgeCard.style.position = "relative";
+                badgeCard.innerHTML = `
+                    <!-- Foto de Perfil (Absoluta) -->
+                    <div class="badge-avatar-container" style="position: absolute; top: 30px; left: 105px; width: 110px; height: 110px; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); z-index: 3; overflow: hidden; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0;">
+                        <img id="badge-avatar" src="${uploadedPhotoBase64 || defaultAvatar}" class="badge-avatar-img" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                    </div>
+
+                    <!-- Cuerpo de contenido -->
+                    <div id="badge-dynamic-content" class="badge-body" style="position: absolute; top: 0; left: 0; width: 320px; height: 500px; padding: 160px 25px 25px 25px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #FAFBFC; z-index: 2; border-radius: 16px;">
+                        <!-- Banda Azul Superior -->
+                        <div class="badge-header-band" style="position: absolute; top: 0; left: 0; width: 100%; height: 85px; background: #0D4FB3; border-top-left-radius: 16px; border-top-right-radius: 16px; z-index: 1;"></div>
+                        <!-- Info -->
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                            <div id="badge-name" class="badge-name" style="font-size: 22px; font-weight: 700; color: #1E293B; font-family: Arial, sans-serif; text-align: center; line-height: 1.2;">Nombre Colaborador</div>
+                            <div id="badge-role" class="badge-role" style="font-size: 15px; font-weight: 600; color: #1565C0; font-family: Arial, sans-serif; text-align: center; margin-top: 4px;">Cargo / Puesto</div>
+                            
+                            <div class="badge-divider" style="border-top: 1.5px solid #E2E8F0; width: 85%; margin: 10px 0;"></div>
+                            
+                            <div class="badge-meta-row">
+                                <span class="badge-meta-label">Área</span>
+                                <span id="badge-area" class="badge-meta-value">Área</span>
+                            </div>
+                            <div class="badge-meta-row">
+                                <span class="badge-meta-label">DNI</span>
+                                <span id="badge-dni" class="badge-meta-value">DNI</span>
+                            </div>
+                        </div>
+
+                        <!-- QR -->
+                        <div class="badge-qr-container" style="display: flex; align-items: center; justify-content: center; background: #ffffff; border: 1px solid #E2E8F0; padding: 5px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); width: 110px; height: 110px;">
+                            <div id="badge-qrcode"></div>
+                        </div>
+
+                        <!-- Footer con logo integrado -->
+                        <div id="badge-footer" class="badge-footer-text" style="border-top: 1px solid #E2E8F0; width: 100%; padding-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box;">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTE2IiBoZWlnaHQ9IjY1IiB2aWV3Qm94PSIwIDAgMTE2IDY1IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iR3JvdXAiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNMCAzNS44MjI5QzAgMzUuODIyOSAzMi41MzA2IDEwNi4wODcgMTE1LjEzOSAyNy43NDE3QzExNS4yNCAyNy42NDY3IDEwMC42MDIgMTcuMTY4MSA5OS43MDEgMTYuNjA2NUM4OC4zNDQzIDkuNTMyNDUgNzUuODcyMyAzLjc4NTI5IDYyLjY5MzIgMS4yMzYyMkM0NS40MzM2IC0yLjEwMjA1IDI3LjA3ODggMS4xMjM4OSAxMy44NDQyIDEzLjMyMkM3LjQ0NTMyIDE5LjIxODkgMi44NDAxNCAyNy42MzcxIDAgMzUuODIyOVoiIGZpbGw9IiMwMjAwQ0QiLz4KPGcgaWQ9Ikdyb3VwXzIiPgo8ZyBpZD0iR3JvdXBfMyI+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTM4LjQyNzQgMjUuNjgyM0gzOC4yNTU0QzM3LjIwNzEgMjUuNjgyMyAzNi4zMjAzIDI1LjkzODYgMzUuNjIwNyAyNi40NDM2QzM1LjE1NzMgMjYuNzc4NyAzNC43NjQ1IDI3LjIyMzIgMzQuNDUwMSAyNy43NzA1VjIwLjA5NDVIMzAuMTY1VjM5Ljk4NzhIMzQuNDUwMVYzMi4wMDg0QzM0LjQ1MDEgMzEuMjY4MSAzNC42NjEzIDMwLjY3IDM1LjA3NzkgMzAuMjI4M0MzNS40OTg0IDI5Ljc4MzggMzYuMDM5MyAyOS41Njc4IDM2LjczMjEgMjkuNTY3OEMzNy40MjUgMjkuNTY3OCAzNy45MTA0IDI5Ljc3MjMgMzguMzEzNyAzMC4xOTI4QzM4LjcxMzIgMzAuNjA5NSAzOC45MTU4IDMxLjE3MTIgMzguOTE1OCAzMS44NjA1VjM5Ljk4ODdINDMuMjAwOFYzMi4xMDczQzQzLjIwMDggMzAuMDM2MyA0Mi43OTI3IDI4LjQzNDkgNDEuOTg2MiAyNy4zNDcxQzQxLjE2ODIgMjYuMjQzIDM5Ljk3MDggMjUuNjgzMiAzOC40Mjg0IDI1LjY4MzJMMzguNDI3NCAyNS42ODIzWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggaWQ9IlZlY3Rvcl8zIiBkPSJNNjQuNjY4NyAzNS42NjgzTDYxLjk5MjkgMjYuMTAxOEg1Ny41NjY0TDYxLjY2NTEgMzkuODYxTDYxLjcwMzMgMzkuOTg3N0g2Ny41NDk5TDcxLjEzMTYgMjYuMTAxOEg2Ni45Nzk0TDY0LjY2ODcgMzUuNjY4M1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGlkPSJWZWN0b3JfNCIgZD0iTTc3LjA1NTYgMjYuMTAxOEg3Mi43NzA1VjM5Ljk4NzdINzcuMDU1NlYyNi4xMDE4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggaWQ9IlZlY3Rvcl81IiBkPSJNODYuOTkxNCAyNi4xMDE4SDg2LjgxOTRDODUuNzU5NiAyNi4xMDE4IDg0Ljg0MzEgMjYuMzM2MSA4NC4wOTY4IDI2Ljc5ODhDODMuMzY4NiAyNy4yNTEgODIuODE0MyAyNy45Mjg5IDgyLjQ0ODMgMjguODE0MVYyNi4xMDE4SDc4Ljk3NDZWMzkuOTg3N0g4My4yNTk3VjMyLjE3MDZDODMuMjU5NyAzMS40Nzc0IDgzLjQ2NDIgMzAuOTM1IDgzLjg4MzcgMzAuNTEwNkM4NC4zMDMyIDMwLjA4NzIgODQuODQ2IDI5Ljg4MDggODUuNTQwOCAyOS44ODA4Qzg2LjIzNTUgMjkuODgwOCA4Ni43MzgyIDMwLjA4MjQgODcuMTMzOCAzMC40OTcyQzg3LjUzMTMgMzAuOTEzOCA4Ny43MjQ0IDMxLjQzOCA4Ny43MjQ0IDMyLjA5ODZWMzkuOTg3N0g5Mi4wMDk0VjMyLjMxNDZDOTIuMDA5NCAzMC4yNTQyIDkxLjU3ODQgMjguNjg5MyA5MC43MjcgMjcuNjYyOUM4OS44Njg4IDI2LjYyNyA4OC42MTEyIDI2LjEwMjggODYuOTkxNCAyNi4xMDI4VjI2LjEwMThaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBpZD0iVmVjdG9yXzYiIGQ9Ik0yMS4yMjk0IDI0Ljc4NTVDMjIuOTU3MiAyNC43ODU1IDI0LjQ4NDMgMjUuNjMwNCAyNS40MzcxIDI2LjkyODVMMjguNzYxNyAyMy41ODgzQzI2Ljk0ODkgMjEuNDUyMSAyNC4yNDczIDIwLjA5NDUgMjEuMjI4NSAyMC4wOTQ1QzE1Ljc2MjMgMjAuMDk0NSAxMS4zMjkxIDI0LjU0ODQgMTEuMzI5MSAzMC4wNDAyQzExLjMyOTEgMzUuNTMyIDE1Ljc2MjMgMzkuOTg1OSAyMS4yMjg1IDM5Ljk4NTlDMjQuMTkwOSAzOS45ODU5IDI2Ljg0NjYgMzguNjgyIDI4LjY1NTYgMzYuNjEzTDI1LjM0MDYgMzMuMjgyNEMyNC4zODMgMzQuNTA2NiAyMi44OTg5IDM1LjI5NjcgMjEuMjI4NSAzNS4yOTY3QzE4LjMzOTYgMzUuMjk2NyAxNS45OTc0IDMyLjk0MzUgMTUuOTk3NCAzMC4wNDExQzE1Ljk5NzQgMjcuMTM4NyAxOC4zMzk2IDI0Ljc4NTUgMjEuMjI4NSAyNC43ODU1SDIxLjIyOTRaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBpZD0iVmVjdG9yXzciIGQ9Ik01Ni40NTQ3IDI4LjQ3MDRDNTUuOTQ1NCAyNy42NzY0IDU1LjE5NDMgMjcuMDc1NCA1NC4yMjE0IDI2LjY4MzZDNTMuMjYyOSAyNi4yOTc3IDUyLjA3MDMgMjYuMTAxOCA1MC42Nzc5IDI2LjEwMThDNTAuMjAxMSAyNi4xMDE4IDQ5LjY5MTcgMjYuMTEwNCA0OS4xNDg5IDI2LjEyNThDNDguNjA1MiAyNi4xNDIxIDQ4LjA3MzggMjYuMTY2MSA0Ny41NzAyIDI2LjE5NjlDNDcuMDYwOSAyNi4yMjg1IDQ2LjYxNzUgMjYuMjYwMiA0Ni4yNCAyNi4yOTE5TDQ2LjA3ODUgMjYuMzA1M1YyOS44NTY4TDQ2LjI2NTggMjkuODQ1MkM0Ni43NzMyIDI5LjgxMzYgNDcuMzM3MSAyOS43ODE5IDQ3Ljk2MDEgMjkuNzUwMkM0OC41ODEzIDI5LjcxOTUgNDkuMTg2MiAyOS42OTU1IDQ5Ljc3MzkgMjkuNjc5MUM1MC4zNjI2IDI5LjY2MzggNTAuODM1NiAyOS42NTYxIDUxLjE5NDkgMjkuNjU2MUM1MS44NjM5IDI5LjY1NjEgNTIuMzUxMiAyOS44MDU5IDUyLjY0MjcgMzAuMTAxNkM1Mi45MTQxIDMwLjM3NjIgNTMuMDYxMyAzMC43OTI5IDUzLjA4MDQgMzEuMzQwMUg1MC44MjYxQzQ5LjYxNzIgMzEuMzQwMSA0OC41MzI1IDMxLjQ4OTkgNDcuNjAxOCAzMS43ODY2QzQ2LjY1NTcgMzIuMDg4IDQ1LjkwOTMgMzIuNTYxNCA0NS4zODE4IDMzLjE5MjJDNDQuODQ4NiAzMy44MzA2IDQ0LjU3OTEgMzQuNjUzNCA0NC41NzkxIDM1LjY0MDRDNDQuNTc5MSAzNi41NDEgNDQuNzk2IDM3LjMyNzMgNDUuMjIyMiAzNy45NzczQzQ1LjY0NzUgMzguNjI2MyA0Ni4yNDc2IDM5LjEzMDQgNDcuMDA1NSAzOS40NzQxQzQ3Ljc1MzcgMzkuODE0OSA0OC42MzM4IDM5Ljk4NzcgNDkuNjIyIDM5Ljk4NzdDNTAuNjEwMSAzOS45ODc3IDUxLjQwNDIgMzkuODE0IDUyLjA3NDEgMzkuNDcxMkM1Mi43NDg4IDM5LjEyNTYgNTMuMjg0OSAzOC42MjQ0IDUzLjY2OTEgMzcuOTgzMUM1My42OTU4IDM3LjkzODkgNTMuNzIxNiAzNy44OTI4IDUzLjc0NzQgMzcuODQ1OFYzOS45ODc3SDU3LjIyMTFWMzEuNTE2OEM1Ny4yMjExIDMwLjI4NjkgNTYuOTYzMSAyOS4yNjI1IDU2LjQ1NTcgMjguNDcwNEg1Ni40NTQ3Wk01My4xNDczIDM0LjQ4MjVDNTMuMTEgMzUuMTczOCA1Mi45ODAxIDM1LjcxNTMgNTIuNzU3NCAzNi4xMDdDNTIuNTM0NyAzNi40OTg3IDUyLjI1MDkgMzYuNzc1MiA1MS45MDY5IDM2LjkzMzdDNTEuNTYyOSAzNy4wOTMgNTEuMTY4MiAzNy4xNzE4IDUwLjcyMTkgMzcuMTcxOEM1MC4wMzM4IDM3LjE3MTggNDkuNTA0NCAzNi45OTkgNDkuMTMyNyAzNi42NTMzQzQ4Ljc2MDkgMzYuMzA3NyA0OC41NzQ2IDM1Ljg1NTUgNDguNTc0NiAzNS4yOTQ4QzQ4LjU3NDYgMzQuNzM0MSA0OC43NiAzNC4yNTQgNDkuMTMyNyAzMy45MDg0QzQ5LjUwNDQgMzMuNTYyOCA1MC4wMzM4IDMzLjM4OTkgNTAuNzIxOSAzMy4zODk5SDUzLjE0NzNWMzQuNDgyNVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPHBhdGggaWQ9IlZlY3Rvcl84IiBkPSJNNzIuODE1MyAyMy44NjVDNzIuODE1MyAyMy44NjUgNzYuMTA3NCAyNi44NzAxIDc4Ljc1NzQgMjAuODUxMkM3OC43NjAzIDIwLjg0MzUgNzcuNzQ5MiAyMC42MTUgNzcuNjg5IDIwLjYwNTRDNzYuOTI4MyAyMC40ODQ0IDc2LjEzNzEgMjAuNDU4NSA3NS4zNzkyIDIwLjYxODlDNzQuMzg3MyAyMC44MjkxIDczLjQ4MzMgMjEuNDExOSA3My4wNTEzIDIyLjM1NzZDNzIuODQyIDIyLjgxNDYgNzIuNzg0NyAyMy4zNjU3IDcyLjgxNTMgMjMuODY1WiIgZmlsbD0iI0JBRkYyOSIvPgo8L2c+CjwvZz4KPC9zdmc+Cg==" style="height: 20px; width: auto; display: block;">
+                            <div style="text-align: left; font-family: Arial, sans-serif; font-size: 8px; color: #64748B; font-weight: 600; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Agrícola y Ganadera<br>Chavín de Huántar S.A.
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.classList.add('horizontal-layout');
+                badgeCard.className = "badge-element badge-horizontal";
+                badgeCard.style.position = "relative";
+                badgeCard.innerHTML = `
+                    <!-- Foto de Perfil (Absoluta) -->
+                    <div class="badge-avatar-container" style="position: absolute; top: 105px; left: 30px; width: 110px; height: 110px; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); z-index: 3; overflow: hidden; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0;">
+                        <img id="badge-avatar" src="${uploadedPhotoBase64 || defaultAvatar}" class="badge-avatar-img" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                    </div>
+
+                    <!-- Cuerpo de contenido (A la derecha del avatar) -->
+                    <div id="badge-dynamic-content" class="badge-body" style="position: absolute; top: 0; left: 0; width: 560px; height: 320px; padding: 25px 25px 50px 165px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; background: #FAFBFC; z-index: 2; border-radius: 16px;">
+                        <!-- Banda Azul Lateral (Vertical de izquierda hasta la mitad de la foto, x = 85px) -->
+                        <div class="badge-header-band" style="position: absolute; top: 0; left: 0; width: 85px; height: 100%; background: #0D4FB3; border-top-left-radius: 16px; border-bottom-left-radius: 16px; z-index: 1;"></div>
+
+                        <!-- Info -->
+                        <div style="position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: center; flex-grow: 1; padding-right: 15px; height: 100%; box-sizing: border-box; margin-top: -10px;">
+                            <div id="badge-name" class="badge-name" style="font-size: 20px; font-weight: 700; color: #1E293B; font-family: Arial, sans-serif; line-height: 1.25;">Nombre Colaborador</div>
+                            <div id="badge-role" class="badge-role" style="font-size: 14px; font-weight: 600; color: #1565C0; font-family: Arial, sans-serif; margin-top: 2px;">Cargo / Puesto</div>
+                            
+                            <div class="badge-divider" style="border-top: 1.5px solid #E2E8F0; width: 100%; margin: 8px 0;"></div>
+                            
+                            <div class="badge-meta-row">
+                                <span class="badge-meta-label">Área</span>
+                                <span id="badge-area" class="badge-meta-value">Área</span>
+                            </div>
+                            <div class="badge-meta-row">
+                                <span class="badge-meta-label">DNI</span>
+                                <span id="badge-dni" class="badge-meta-value">DNI</span>
+                            </div>
+                        </div>
+
+                        <!-- QR -->
+                        <div style="display: flex; align-items: center; justify-content: center; width: 120px; height: 100%; margin-top: -10px;">
+                            <div class="badge-qr-container" style="display: flex; align-items: center; justify-content: center; background: #ffffff; border: 1px solid #E2E8F0; padding: 5px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); width: 110px; height: 110px;">
+                                <div id="badge-qrcode"></div>
+                            </div>
+                        </div>
+
+                        <!-- Footer con logo integrado (Posicionado abajo a la derecha) -->
+                        <div id="badge-footer" class="badge-footer-text" style="position: absolute; bottom: 15px; right: 25px; display: flex; align-items: center; gap: 8px; width: auto;">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTE2IiBoZWlnaHQ9IjY1IiB2aWV3Qm94PSIwIDAgMTE2IDY1IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iR3JvdXAiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNMCAzNS44MjI5QzAgMzUuODIyOSAzMi41MzA2IDEwNi4wODcgMTE1LjEzOSAyNy43NDE3QzExNS4yNCAyNy42NDY3IDEwMC42MDIgMTcuMTY4MSA5OS43MDEgMTYuNjA2NUM4OC4zNDQzIDkuNTMyNDUgNzUuODcyMyAzLjc4NTI5IDYyLjY5MzIgMS4yMzYyMkM0NS40MzM2IC0yLjEwMjA1IDI3LjA3ODggMS4xMjM4OSAxMy44NDQyIDEzLjMyMkM3LjQ0NTMyIDE5LjIxODkgMi44NDAxNCAyNy42MzcxIDAgMzUuODIyOVoiIGZpbGw9IiMwMjAwQ0QiLz4KPGcgaWQ9Ikdyb3VwXzIiPgo8ZyBpZD0iR3JvdXBfMyI+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTM4LjQyNzQgMjUuNjgyM0gzOC4yNTU0QzM3LjIwNzEgMjUuNjgyMyAzNi4zMjAzIDI1LjkzODYgMzUuNjIwNyAyNi40NDM2QzM1LjE1NzMgMjYuNzc4NyAzNC43NjQ1IDI3LjIyMzIgMzQuNDUwMSAyNy43NzA1VjIwLjA5NDVIMzAuMTY1VjM5Ljk4NzhIMzQuNDUwMVYzMi4wMDg0QzM0LjQ1MDEgMzEuMjY4MSAzNC42NjEzIDMwLjY3IDM1LjA3NzkgMzAuMjI4M0MzNS40OTg0IDI5Ljc4MzggMzYuMDM5MyAyOS41Njc4IDM2LjczMjEgMjkuNTY3OEMzNy40MjUgMjkuNTY3OCAzNy45MTA0IDI5Ljc3MjMgMzguMzEzNyAzMC4xOTI4QzM4LjcxMzIgMzAuNjA5NSAzOC45MTU4IDMxLjE3MTIgMzguOTE1OCAzMS44NjA1VjM5Ljk4ODdINDMuMjAwOFYzMi4xMDczQzQzLjIwMDggMzAuMDM2MyA0Mi43OTI3IDI4LjQzNDkgNDEuOTg2MiAyNy4zNDcxQzQxLjE2ODIgMjYuMjQzIDM5Ljk3MDggMjUuNjgzMiAzOC40Mjg0IDI1LjY4MzJMMzguNDI3NCAyNS42ODIzWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggaWQ9IlZlY3Rvcl8zIiBkPSJNNjQuNjY4NyAzNS42NjgzTDYxLjk5MjkgMjYuMTAxOEg1Ny41NjY0TDYxLjY2NTEgMzkuODYxTDYxLjcwMzMgMzkuOTg3N0g2Ny41NDk5TDcxLjEzMTYgMjYuMTAxOEg2Ni45Nzk0TDY0LjY2ODcgMzUuNjY4M1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGlkPSJWZWN0b3JfNCIgZD0iTTc3LjA1NTYgMjYuMTAxOEg3Mi43NzA1VjM5Ljk4NzdINzcuMDU1NlYyNi4xMDE4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggaWQ9IlZlY3Rvcl81IiBkPSJNODYuOTkxNCAyNi4xMDE4SDg2LjgxOTRDODUuNzU5NiAyNi4xMDE4IDg0Ljg0MzEgMjYuMzM2MSA4NC4wOTY4IDI2Ljc5ODhDODMuMzY4NiAyNy4yNTEgODIuODE0MyAyNy45Mjg5IDgyLjQ0ODMgMjguODE0MVYyNi4xMDE4SDc4Ljk3NDZWMzkuOTg3N0g4My4yNTk3VjMyLjE3MDZDODMuMjU5NyAzMS40Nzc0IDgzLjQ2NDIgMzAuOTM1IDgzLjg4MzcgMzAuNTEwNkM4NC4zMDMyIDMwLjA4NzIgODQuODQ2IDI5Ljg4MDggODUuNTQwOCAyOS44ODA4Qzg2LjIzNTUgMjkuODgwOCA4Ni43MzgyIDMwLjA4MjQgODcuMTMzOCAzMC40OTcyQzg3LjUzMTMgMzAuOTEzOCA4Ny43MjQ0IDMxLjQzOCA4Ny43MjQ0IDMyLjA5ODZWMzkuOTg3N0g5Mi4wMDk0VjMyLjMxNDZDOTIuMDA5NCAzMC4yNTQyIDkxLjU3ODQgMjguNjg5MyA5MC43MjcgMjcuNjYyOUM4OS44Njg4IDI2LjYyNyA4OC42MTEyIDI2LjEwMjggODYuOTkxNCAyNi4xMDI4VjI2LjEwMThaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBpZD0iVmVjdG9yXzYiIGQ9Ik0yMS4yMjk0IDI0Ljc4NTVDMjIuOTU3MiAyNC43ODU1IDI0LjQ4NDMgMjUuNjMwNCAyNS40MzcxIDI2LjkyODVMMjguNzYxNyAyMy41ODgzQzI2Ljk0ODkgMjEuNDUyMSAyNC4yNDczIDIwLjA5NDUgMjEuMjI4NSAyMC4wOTQ1QzE1Ljc2MjMgMjAuMDk0NSAxMS4zMjkxIDI0LjU0ODQgMTEuMzI5MSAzMC4wNDAyQzExLjMyOTEgMzUuNTMyIDE1Ljc2MjMgMzkuOTg1OSAyMS4yMjg1IDM5Ljk4NTlDMjQuMTkwOSAzOS45ODU5IDI2Ljg0NjYgMzguNjgyIDI4LjY1NTYgMzYuNjEzTDI1LjM0MDYgMzMuMjgyNEMyNC4zODMgMzQuNTA2NiAyMi44OTg5IDM1LjI5NjcgMjEuMjI4NSAzNS4yOTY3QzE4LjMzOTYgMzUuMjk2NyAxNS45OTc0IDMyLjk0MzUgMTUuOTk3NCAzMC4wNDExQzE1Ljk5NzQgMjcuMTM4NyAxOC4zMzk2IDI0Ljc4NTUgMjEuMjI4NSAyNC43ODU1SDIxLjIyOTRaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBpZD0iVmVjdG9yXzciIGQ9Ik01Ni40NTQ3IDI4LjQ3MDRDNTUuOTQ1NCAyNy42NzY0IDU1LjE5NDMgMjcuMDc1NCA1NC4yMjE0IDI2LjY4MzZDNTMuMjYyOSAyNi4yOTc3IDUyLjA3MDMgMjYuMTAxOCA1MC42Nzc5IDI2LjEwMThDNTAuMjAxMSAyNi4xMDE4IDQ5LjY5MTcgMjYuMTEwNCA0OS4xNDg5IDI2LjEyNThDNDguNjA1MiAyNi4xNDIxIDQ4LjA3MzggMjYuMTY2MSA0Ny41NzAyIDI2LjE5NjlDNDcuMDYwOSAyNi4yMjg1IDQ2LjYxNzUgMjYuMjYwMiA0Ni4yNCAyNi4yOTE5TDQ2LjA3ODUgMjYuMzA1M1YyOS44NTY4TDQ2LjI2NTggMjkuODQ1MkM0Ni43NzMyIDI5LjgxMzYgNDcuMzM3MSAyOS43ODE5IDQ3Ljk2MDEgMjkuNzUwMkM0OC41ODEzIDI5LjcxOTUgNDkuMTg2MiAyOS42OTU1IDQ5Ljc3MzkgMjkuNjc5MUM1MC4zNjI2IDI5LjY2MzggNTAuODM1NiAyOS42NTYxIDUxLjE5NDkgMjkuNjU2MUM1MS44NjM5IDI5LjY1NjEgNTIuMzUxMiAyOS44MDU5IDUyLjY0MjcgMzAuMTAxNkM1Mi45MTQxIDMwLjM3NjIgNTMuMDYxMyAzMC43OTI5IDUzLjA4MDQgMzEuMzQwMUg1MC44MjYxQzQ5LjYxNzIgMzEuMzQwMSA0OC41MzI1IDMxLjQ4OTkgNDcuNjAxOCAzMS43ODY2QzQ2LjY1NTcgMzIuMDg4IDQ1LjkwOTMgMzIuNTYxNCA0NS4zODE4IDMzLjE5MjJDNDQuODQ4NiAzMy44MzA2IDQ0LjU3OTEgMzQuNjUzNCA0NC41NzkxIDM1LjY0MDRDNDQuNTc5MSAzNi41NDEgNDQuNzk2IDM3LjMyNzMgNDUuMjIyMiAzNy45NzczQzQ1LjY0NzUgMzguNjI2MyA0Ni4yNDc2IDM5LjEzMDQgNDcuMDA1NSAzOS40NzQxQzQ3Ljc1MzcgMzkuODE0OSA0OC42MzM4IDM5Ljk4NzcgNDkuNjIyIDM5Ljk4NzdDNTAuNjEwMSAzOS45ODc3IDUxLjQwNDIgMzkuODE0IDUyLjA3NDEgMzkuNDcxMkM1Mi43NDg4IDM5LjEyNTYgNTMuMjg0OSAzOC42MjQ0IDUzLjY2OTEgMzcuOTgzMUM1My42OTU4IDM3LjkzODkgNTMuNzIxNiAzNy44OTI4IDUzLjc0NzQgMzcuODQ1OFYzOS45ODc3SDU3LjIyMTFWMzEuNTE2OEM1Ny4yMjExIDMwLjI4NjkgNTYuOTYzMSAyOS4yNjI1IDU2LjQ1NTcgMjguNDcwNEg1Ni40NTQ3Wk01My4xNDczIDM0LjQ4MjVDNTMuMTEgMzUuMTczOCA1Mi45ODAxIDM1LjcxNTMgNTIuNzU3NCAzNi4xMDdDNTIuNTM0NyAzNi40OTg3IDUyLjI1MDkgMzYuNzc1MiA1MS45MDY5IDM2LjkzMzdDNTEuNTYyOSAzNy4wOTMgNTEuMTY4MiAzNy4xNzE4IDUwLjcyMTkgMzcuMTcxOEM1MC4wMzM4IDM3LjE3MTggNDkuNTA0NCAzNi45OTkgNDkuMTMyNyAzNi42NTMzQzQ4Ljc2MDkgMzYuMzA3NyA0OC41NzQ2IDM1Ljg1NTUgNDguNTc0NiAzNS4yOTQ4QzQ4LjU3NDYgMzQuNzM0MSA0OC43NiAzNC4yNTQgNDkuMTMyNyAzMy45MDg0QzQ5LjUwNDQgMzMuNTYyOCA1MC4wMzM4IDMzLjM4OTkgNTAuNzIxOSAzMy4zODk5SDUzLjE0NzNWMzQuNDgyNVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPHBhdGggaWQ9IlZlY3Rvcl84IiBkPSJNNzIuODE1MyAyMy44NjVDNzIuODE1MyAyMy44NjUgNzYuMTA3NCAyNi44NzAxIDc4Ljc1NzQgMjAuODUxMkM3OC43NjAzIDIwLjg0MzUgNzcuNzQ5MiAyMC42MTUgNzcuNjg5IDIwLjYwNTRDNzYuOTI4MyAyMC40ODQ0IDc2LjEzNzEgMjAuNDU4NSA3NS4zNzkyIDIwLjYxODlDNzQuMzg3MyAyMC44MjkxIDczLjQ4MzMgMjEuNDExOSA3My4wNTEzIDIyLjM1NzZDNzIuODQyIDIyLjgxNDYgNzIuNzg0NyAyMy4zNjU3IDcyLjgxNTMgMjMuODY1WiIgZmlsbD0iI0JBRkYyOSIvPgo8L2c+CjwvZz4KPC9zdmc+Cg==" style="height: 20px; width: auto; display: block;">
+                            <div style="text-align: left; font-family: Arial, sans-serif; font-size: 8px; color: #64748B; font-weight: 600; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Agrícola y Ganadera<br>Chavín de Huántar S.A.
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Actualizar la previsualización en tiempo real
+        function updatePreview() {
+            const elName = document.getElementById('badge-name');
+            const elRole = document.getElementById('badge-role');
+            const elArea = document.getElementById('badge-area');
+            const elDni = document.getElementById('badge-dni');
+            const elAvatar = document.getElementById('badge-avatar');
+
+            const nameVal = inputName.value.trim() || 'Nombre Colaborador';
+            const roleVal = inputRole.value.trim() || 'Cargo / Puesto';
+            const areaVal = inputArea.value.trim() || '';
+            const dniVal = inputDni.value.trim() || '';
+
+            if (elName) elName.textContent = nameVal;
+            if (elRole) elRole.textContent = roleVal;
+            if (elArea) elArea.textContent = areaVal;
+            if (elDni) elDni.textContent = dniVal;
+            if (elAvatar && uploadedPhotoBase64) elAvatar.src = uploadedPhotoBase64;
+
+            // Regenerar el Código QR
+            generateQR(nameVal, roleVal, areaVal, dniVal);
+        }
+
+        // Generar código QR de manera segura
+        function generateQR(name, role, area, dni) {
+            // Formato de una sola línea separado por barras para máxima compatibilidad con todos los lectores
+            const qrText = `CHAVIN | NOM: ${name} | CAR: ${role} | ARE: ${area} | DNI: ${dni}`;
+            const qrContainer = document.getElementById('badge-qrcode');
+            
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                // Verificar que la librería QRCode esté cargada para evitar ReferenceError
+                if (typeof QRCode !== 'undefined') {
+                    try {
+                        // Codificación UTF-8 explícita para evitar errores de tildes y eñes en lectores QR
+                        const utf8Text = unescape(encodeURIComponent(qrText));
+                        new QRCode(qrContainer, {
+                            text: utf8Text,
+                            width: 100, // Tamaño aumentado para mejor legibilidad
+                            height: 100,
+                            colorDark : "#0f172a",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.M
+                        });
+                    } catch (err) {
+                        console.error("Error al renderizar QR:", err);
+                        qrContainer.innerHTML = '<span style="font-size: 8px; color: red;">QR</span>';
+                    }
+                } else {
+                    // Fallback visual en caso de que esté offline y no se cargue el CDN
+                    qrContainer.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;border:1px dashed #cbd5e1;font-size:9px;color:#64748b;font-weight:bold;text-align:center;">QR</div>';
+                }
+            }
+        }
+
+        // Mostrar alerta visual
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Descarga de la credencial en alta resolución
+        btnDownload.addEventListener('click', () => {
+            const formatRadio = document.querySelector('input[name="format"]:checked');
+            const format = formatRadio ? formatRadio.value : 'png';
+            const mimeType = `image/${format}`;
+            
+            const nameVal = inputName.value.trim().replace(/\s+/g, '_') || 'Credencial';
+            const extension = format === 'jpeg' ? 'jpg' : format;
+            const filename = `credencial_${nameVal.toLowerCase()}.${extension}`;
+            
+            // Opciones de exportación de html2canvas (escala 4x para excelente calidad de impresión)
+            const options = {
+                backgroundColor: null,
+                scale: 4,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            };
+
+            btnDownload.disabled = true;
+            btnDownload.innerHTML = `
+                <svg class="animate-spin" style="animation: spin 1s linear infinite;" width="20" height="20" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity: 0.25;"></circle>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generando...
+            `;
+
+            const style = document.createElement('style');
+            style.innerHTML = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+
+            setTimeout(() => {
+                html2canvas(badgeCard, options).then(canvas => {
+                    let quality = 1.0;
+                    if (format === 'jpeg') quality = 0.90;
+                    else if (format === 'webp') quality = 0.85;
+
+                    const imgData = canvas.toDataURL(mimeType, quality);
+
+                    // Descargar imagen
+                    const link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    btnDownload.disabled = false;
+                    btnDownload.innerHTML = `
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Descargar Credencial
+                    `;
+                    showToast("¡Credencial descargada!");
+                }).catch(err => {
+                    console.error("Error al exportar credencial:", err);
+                    btnDownload.disabled = false;
+                    btnDownload.innerHTML = `
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Descargar Credencial
+                    `;
+                    showToast("Error al exportar imagen");
+                });
+            }, 300);
+        });
+    </script>
+</body>
+</html>
